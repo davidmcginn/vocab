@@ -2,7 +2,7 @@
 <html lang="ga">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#1B4332">
@@ -98,6 +98,7 @@
       font-size: 15px;
       color: #fff;
       outline: none;
+      touch-action: manipulation;
     }
 
     #search::placeholder { color: rgba(255,255,255,0.45); }
@@ -292,6 +293,7 @@
       color: var(--text-primary);
       outline: none;
       transition: border-color 0.15s;
+      touch-action: manipulation;
     }
 
     .add-input::placeholder { color: var(--text-placeholder); }
