@@ -32,9 +32,8 @@
       --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
     }
 
-    html, body {
+    html {
       height: 100%;
-      overflow: hidden;
     }
 
     body {
@@ -44,6 +43,7 @@
       display: flex;
       flex-direction: column;
       height: 100dvh;
+      overflow: hidden;
       overscroll-behavior: none;
     }
 
@@ -618,6 +618,11 @@
   $search.addEventListener('input', () => {
     searchQuery = $search.value;
     render();
+  });
+
+  // ── FORCE KEYBOARD ON TOUCH (Chrome Android PWA workaround) ──────────────
+  [$inputIrish, $inputEng, $search].forEach(el => {
+    el.addEventListener('touchstart', () => el.focus(), { passive: true });
   });
 
   // ── INIT ──────────────────────────────────────────────────────────────────
