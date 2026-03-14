@@ -32,17 +32,22 @@
       --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
     }
 
-    html {
+    html, body {
       height: 100%;
+      overflow: visible;
     }
 
     body {
       font-family: var(--font);
       background: var(--bg);
       color: var(--text-primary);
+    }
+
+    #app {
+      position: fixed;
+      inset: 0;
       display: flex;
       flex-direction: column;
-      height: 100dvh;
       overflow: hidden;
       overscroll-behavior: none;
     }
@@ -348,6 +353,7 @@
   </style>
 </head>
 <body>
+<div id="app">
 
   <!-- HEADER -->
   <div id="header">
@@ -401,6 +407,7 @@
     <button id="btn-add" disabled>Add</button>
   </div>
 
+</div><!-- #app -->
 <script>
   // ── STATE ──────────────────────────────────────────────────────────────────
   const STORAGE_KEY = 'irish-vocab';
