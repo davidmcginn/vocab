@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="ga">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#1B4332">
+  <title>Focail</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    :root {
+      --green-deep:   #1B4332;
+      --green-mid:    #2D6A4F;
+      --green-accent: #52B788;
+      --green-bright: #40C074;
+      --bg:           #F2F4F0;
+      --card:         #FFFFFF;
+      --text-primary: #111816;
+      --text-secondary: #6B7A72;
+      --text-placeholder: #A3B0A8;
+      --border:       rgba(0,0,0,0.07);
+      --header-height: 110px;
+      --bar-height:    72px;
+      --radius:        14px;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text-primary);
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      overscroll-behavior: none;
+    }
+
+    /* ── HEADER ── */
+    #header {
+      flex-shrink: 0;
+      background: var(--green-deep);
+      padding-top: calc(env(safe-area-inset-top) + 16px);
+      padding-left: 20px;
+      padding-right: 20px;
+      padding-bottom: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+      z-index: 10;
+    }
+
+    #header h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+
+    #header h1 span {
+      color: var(--green-accent);
+    }
+
+    #search-wrap {
+      position: relative;
+    }
+
+    #search-wrap svg {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-placeholder);
+      pointer-events: none;
+      flex-shrink: 0;
+    }
+
+    #search {
+      width: 100%;
+      height: 40px;
+      background: rgba(255,255,255,0.12);
+      border: none;
+      border-radius: 10px;
+      padding: 0 12px 0 38px;
+      font-family: var(--font);
+      font-size: 15px;
+      color: #fff;
+      outline: none;
+    }
+
+    #search::placeholder { color: rgba(255,255,255,0.45); }
+    #search:focus { background: rgba(255,255,255,0.18); }
+
+    /* ── BANNER ── */
+    #banner {
+      display: none;
+      background: #7F1D1D;
+      color: #FEE2E2;
+      font-size: 13px;
+      line-height: 1.4;
+      padding: 10px 16px 10px 16px;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+      z-index: 9;
+    }
+
+    #banner.visible { display: flex; }
+    #banner-msg { flex: 1; }
+
+    #banner-close {
+      background: none;
+      border: none;
+      color: #FEE2E2;
+      font-size: 18px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+      min-width: 28px;
+      min-height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    #banner-close:active { background: rgba(255,255,255,0.15); }
+
+    /* ── WORD LIST ── */
+    #list-wrap {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
+      padding: 12px 16px;
+      scrollbar-width: none;
+    }
+
+    #list-wrap::-webkit-scrollbar { display: none; }
+
+    /* extra space so last card clears the add bar */
+    #list-wrap::after {
+      content: '';
+      display: block;
+      height: calc(var(--bar-height) + env(safe-area-inset-bottom) + 12px);
+    }
+
+    /* ── EMPTY / NO-RESULTS STATE ── */
+    #state-msg {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 60px 32px;
+      text-align: center;
+    }
+
+    #state-msg.visible { display: flex; }
+
+    #state-msg .emoji {
+      font-size: 48px;
+      line-height: 1;
+    }
+
+    #state-msg p {
+      font-size: 16px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* ── WORD CARDS ── */
+    #word-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid var(--border);
+      user-select: none;
+      animation: cardIn 0.22s ease both;
+    }
+
+    @keyframes cardIn {
+      from {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .card-text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .card-irish {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-english {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-delete {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #CBD5C8;
+      transition: background 0.15s, color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .card-delete:active {
+      background: #FEE2E2;
+      color: #DC2626;
+    }
+
+    /* ── ADD BAR ── */
+    #add-bar {
+      flex-shrink: 0;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      padding: 10px 16px;
+      padding-bottom: calc(10px + env(safe-area-inset-bottom));
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      position: relative;
+      z-index: 10;
+    }
+
+    #add-bar .inputs {
+      flex: 1;
+      display: flex;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .add-input {
+      flex: 1;
+      min-width: 0;
+      height: 44px;
+      background: var(--bg);
+      border: 1.5px solid transparent;
+      border-radius: 10px;
+      padding: 0 12px;
+      font-family: var(--font);
+      font-size: 15px;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .add-input::placeholder { color: var(--text-placeholder); }
+
+    .add-input:focus {
+      border-color: var(--green-accent);
+      background: #fff;
+    }
+
+    #btn-add {
+      flex-shrink: 0;
+      height: 44px;
+      min-width: 44px;
+      padding: 0 16px;
+      background: var(--green-bright);
+      border: none;
+      border-radius: 10px;
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      white-space: nowrap;
+    }
+
+    #btn-add:disabled {
+      background: #C8D9C5;
+      color: #A0B59D;
+      cursor: default;
+    }
+
+    #btn-add:not(:disabled):active {
+      background: #2D9E5A;
+      transform: scale(0.96);
+    }
+
+    /* Very narrow viewports: stack inputs */
+    @media (max-width: 340px) {
+      #add-bar {
+        flex-wrap: wrap;
+      }
+      #add-bar .inputs {
+        flex-direction: column;
+        width: 100%;
+        flex: none;
+      }
+      #btn-add {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div id="header">
+    <h1>Focail <span>·</span> Focal</h1>
+    <div id="search-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input id="search" type="search" placeholder="Cuardaigh…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+    </div>
+  </div>
+
+  <!-- BANNER -->
+  <div id="banner" role="alert">
+    <span id="banner-msg"></span>
+    <button id="banner-close" aria-label="Dún">×</button>
+  </div>
+
+  <!-- WORD LIST -->
+  <div id="list-wrap">
+    <div id="state-msg" aria-live="polite">
+      <div class="emoji" id="state-emoji">📖</div>
+      <p id="state-text">Níl focal ar bith fós — cuir ceann leis thíos.</p>
+    </div>
+    <div id="word-list" aria-live="polite"></div>
+  </div>
+
+  <!-- ADD BAR -->
+  <div id="add-bar">
+    <div class="inputs">
+      <input
+        id="input-irish"
+        class="add-input"
+        type="text"
+        placeholder="Focal Gaeilge…"
+        autocorrect="off"
+        autocapitalize="none"
+        spellcheck="false"
+        autocomplete="off"
+        inputmode="text"
+      >
+      <input
+        id="input-english"
+        class="add-input"
+        type="text"
+        placeholder="Meaning (optional)"
+        autocomplete="off"
+        inputmode="text"
+      >
+    </div>
+    <button id="btn-add" disabled>Add</button>
+  </div>
+
+<script>
+  // ── STATE ──────────────────────────────────────────────────────────────────
+  const STORAGE_KEY = 'irish-vocab';
+  let entries = [];
+  let storageAvailable = false;
+  let searchQuery = '';
+
+  // ── ELEMENT REFS ──────────────────────────────────────────────────────────
+  const $wordList    = document.getElementById('word-list');
+  const $stateMsg    = document.getElementById('state-msg');
+  const $stateEmoji  = document.getElementById('state-emoji');
+  const $stateText   = document.getElementById('state-text');
+  const $search      = document.getElementById('search');
+  const $inputIrish  = document.getElementById('input-irish');
+  const $inputEng    = document.getElementById('input-english');
+  const $btnAdd      = document.getElementById('btn-add');
+  const $banner      = document.getElementById('banner');
+  const $bannerMsg   = document.getElementById('banner-msg');
+  const $bannerClose = document.getElementById('banner-close');
+
+  // ── LOCALSTORAGE ──────────────────────────────────────────────────────────
+  function detectStorage() {
+    try {
+      const k = '__test__';
+      localStorage.setItem(k, '1');
+      localStorage.removeItem(k);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  function loadEntries() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw === null) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) {
+        localStorage.setItem(STORAGE_KEY, '[]');
+        return [];
+      }
+      return parsed.reduce((acc, e) => {
+        if (!e.irish || typeof e.irish !== 'string' || e.irish.trim() === '') return acc;
+        acc.push({
+          id:      (typeof e.id === 'string' && e.id) ? e.id : crypto.randomUUID(),
+          irish:   e.irish.trim(),
+          english: (typeof e.english === 'string') ? e.english : '',
+          addedAt: (typeof e.addedAt === 'number') ? e.addedAt : Date.now(),
+        });
+        return acc;
+      }, []);
+    } catch {
+      try { localStorage.setItem(STORAGE_KEY, '[]'); } catch {}
+      return [];
+    }
+  }
+
+  function persist() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  }
+
+  // ── BANNER ────────────────────────────────────────────────────────────────
+  function showBanner(msg, dismissible = true) {
+    $bannerMsg.textContent = msg;
+    $bannerClose.style.display = dismissible ? 'flex' : 'none';
+    $banner.classList.add('visible');
+  }
+
+  function hideBanner() {
+    $banner.classList.remove('visible');
+  }
+
+  $bannerClose.addEventListener('click', hideBanner);
+
+  // ── RENDER ────────────────────────────────────────────────────────────────
+  function render() {
+    const q = searchQuery.trim().toLowerCase();
+    const filtered = q
+      ? entries.filter(e =>
+          e.irish.toLowerCase().includes(q) ||
+          e.english.toLowerCase().includes(q)
+        )
+      : entries;
+
+    // Sort newest first (always)
+    const sorted = [...filtered].sort((a, b) => b.addedAt - a.addedAt);
+
+    // Display state
+    if (q && sorted.length === 0) {
+      $stateEmoji.textContent = '🔍';
+      $stateText.textContent  = 'Níl aon toradh — No matches found.';
+      $stateMsg.classList.add('visible');
+      $wordList.innerHTML = '';
+      return;
+    }
+
+    if (entries.length === 0) {
+      $stateEmoji.textContent = '📖';
+      $stateText.textContent  = 'Níl focal ar bith fós — add your first one below.';
+      $stateMsg.classList.add('visible');
+      $wordList.innerHTML = '';
+      return;
+    }
+
+    $stateMsg.classList.remove('visible');
+
+    // Build cards (only replace if changed to avoid re-triggering animations)
+    const existing = [...$wordList.children];
+    const existingIds = existing.map(c => c.dataset.id);
+    const newIds = sorted.map(e => e.id);
+
+    // Fast path: same set and order, nothing to do
+    if (JSON.stringify(existingIds) === JSON.stringify(newIds)) return;
+
+    // Find truly new entries (for animation)
+    const newSet = new Set(newIds.filter(id => !existingIds.includes(id)));
+
+    $wordList.innerHTML = '';
+    for (const entry of sorted) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.id = entry.id;
+
+      // No animation for cards that already existed
+      if (!newSet.has(entry.id)) {
+        card.style.animation = 'none';
+      }
+
+      const textDiv = document.createElement('div');
+      textDiv.className = 'card-text';
+
+      const irishEl = document.createElement('div');
+      irishEl.className = 'card-irish';
+      irishEl.textContent = entry.irish;
+      textDiv.appendChild(irishEl);
+
+      if (entry.english) {
+        const engEl = document.createElement('div');
+        engEl.className = 'card-english';
+        engEl.textContent = entry.english;
+        textDiv.appendChild(engEl);
+      }
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'card-delete';
+      delBtn.setAttribute('aria-label', 'Scrios');
+      delBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+      delBtn.addEventListener('click', () => deleteEntry(entry.id));
+
+      card.appendChild(textDiv);
+      card.appendChild(delBtn);
+      $wordList.appendChild(card);
+    }
+  }
+
+  // ── ADD ───────────────────────────────────────────────────────────────────
+  function handleAdd() {
+    const irish = $inputIrish.value.trim();
+    if (!irish || !storageAvailable) return;
+
+    const entry = {
+      id:      crypto.randomUUID(),
+      irish,
+      english: $inputEng.value.trim(),
+      addedAt: Date.now(),
+    };
+
+    // Write to storage first; only update memory on success
+    try {
+      const next = [entry, ...entries];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      entries = next;
+      hideBanner();
+    } catch (err) {
+      if (err.name === 'QuotaExceededError' || err.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+        showBanner('Storage is full. Delete some words to continue adding.', true);
+      }
+      return;
+    }
+
+    $inputIrish.value  = '';
+    $inputEng.value    = '';
+    $search.value      = '';
+    searchQuery        = '';
+    updateAddButton();
+    render();
+    $inputIrish.focus();
+  }
+
+  // ── DELETE ────────────────────────────────────────────────────────────────
+  function deleteEntry(id) {
+    entries = entries.filter(e => e.id !== id);
+    persist();
+    render();
+  }
+
+  // ── ADD BUTTON STATE ──────────────────────────────────────────────────────
+  function updateAddButton() {
+    $btnAdd.disabled = !$inputIrish.value.trim() || !storageAvailable;
+  }
+
+  // ── EVENT LISTENERS ───────────────────────────────────────────────────────
+  $inputIrish.addEventListener('input', updateAddButton);
+
+  $inputIrish.addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleAdd();
+  });
+
+  $inputEng.addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleAdd();
+  });
+
+  $btnAdd.addEventListener('click', handleAdd);
+
+  $search.addEventListener('input', () => {
+    searchQuery = $search.value;
+    render();
+  });
+
+  // ── INIT ──────────────────────────────────────────────────────────────────
+  storageAvailable = detectStorage();
+
+  if (!storageAvailable) {
+    showBanner('Storage is unavailable in this browser. Words cannot be saved.', false);
+    $btnAdd.disabled = true;
+  } else {
+    entries = loadEntries();
+  }
+
+  render();
+</script>
+</body>
+</html>
