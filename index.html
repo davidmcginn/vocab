@@ -45,7 +45,10 @@
 
     #app {
       position: fixed;
-      inset: 0;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 100%;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -631,6 +634,21 @@
   [$inputIrish, $inputEng, $search].forEach(el => {
     el.addEventListener('touchstart', () => el.focus(), { passive: true });
   });
+
+  // ── KEYBOARD OVERLAP FIX (visualViewport API) ─────────────────────────────
+  // When the soft keyboard opens, visualViewport.height shrinks to the visible
+  // area above the keyboard. We resize #app to match so the add-bar stays visible.
+  if (window.visualViewport) {
+    const $app = document.getElementById('app');
+    function syncAppToViewport() {
+      const vv = window.visualViewport;
+      $app.style.height = vv.height + 'px';
+      $app.style.top    = vv.offsetTop + 'px';
+    }
+    window.visualViewport.addEventListener('resize', syncAppToViewport);
+    window.visualViewport.addEventListener('scroll', syncAppToViewport);
+    syncAppToViewport();
+  }
 
   // ── INIT ──────────────────────────────────────────────────────────────────
   storageAvailable = detectStorage();
